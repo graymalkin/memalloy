@@ -39,8 +39,12 @@ let parse_file cat_path =
   let cat_path = Filename.concat !cat_dir cat_path in
   let ic = open_in cat_path in
   let lexbuf = Lexing.from_channel ic in
-  Cat_parser.main Cat_lexer.token lexbuf
-       
+  try
+    Cat_parser.main Cat_lexer.token lexbuf
+  with _ ->
+    let { Lexing.pos_lnum=line; pos_bol=c0;  pos_cnum=c1 } = lexbuf.Lexing.lex_start_p in
+    failwith "Parse error: %s:%d:%d" cat_path line (c1-c0+1)
+
 (** {2 Unfolding recursive definitions} *)
 
 let add_subscript = sprintf "%s_%d"
